@@ -7,19 +7,11 @@ from torchvision.datasets import CIFAR10
 from torchaudio.datasets import SPEECHCOMMANDS
 from torchvision import transforms
 
-"""
-Write Code for Downloading Image and Audio Dataset Here
-"""
-# Image Downloader
-image_dataset_downloader = CIFAR10(root='./data', train=True, download=True, transform=None)
-
-# Audio Downloader
-audio_dataset_downloader = SPEECHCOMMANDS(root='./data', download=True)
-
-
 '''
-Image Dataset Class
+>>> IMAGE DATASET
+>>> BELOW CLASS DEFINES DATASET FOR IMAGE CLASSIFICATION
 '''
+
 class ImageDataset(Dataset):
     def __init__(self, split:str="train") -> None:
         super().__init__()
@@ -53,9 +45,12 @@ class ImageDataset(Dataset):
         return image, label
         
 
+
 '''
-Audio Dataset Class
+>>> AUDIO DATASET 
+>>> BELOW CLASS DEFINES DATASET FOR AUDIO CLASSIFICATION
 '''
+
 class AudioDataset(Dataset):
     def __init__(self, split:str="train") -> None:
         super().__init__()
@@ -85,8 +80,11 @@ class AudioDataset(Dataset):
 
 
 '''
-Resnet Block Architecture for Image and Audio Classification
+>>> RESNET 
+>>> BELOW FUNCTIONS DEFINES RESNET BLOCKS
+>>> FOR IMAGE AND AUDIO CLASSIFICATION
 '''
+
 def get_resnet_image_block(in_channel, out_channel, keep_size_same=True):
     if not keep_size_same:
         resnet_block = nn.Sequential(
@@ -169,7 +167,7 @@ class Resnet_Q1(nn.Module):
         self.im_relu12 = nn.ReLU()
         self.im_block13, self.im_skip13 = get_resnet_image_block(layers[12], layers[13])
         self.im_relu13 = nn.ReLU()
-        self.im_block14, self.im_skip14 = get_resnet_image_block(layers[13], layers[14], keep_size_same=False)
+        self.im_block14, self.im_skip14 = get_resnet_image_block(layers[13], layers[14])
         self.im_relu14 = nn.ReLU()
         self.im_block15, self.im_skip15 = get_resnet_image_block(layers[14], layers[15])
         self.im_relu15 = nn.ReLU()
@@ -180,15 +178,16 @@ class Resnet_Q1(nn.Module):
         self.im_block18, self.im_skip18 = get_resnet_image_block(layers[17], layers[18])
         self.im_relu18 = nn.ReLU()
         self.im_flatten = nn.Flatten()
-        self.im_fc_layer1 = nn.Linear(layers[-1]*4*4, 10)
-        # self.im_fc_relu1 = nn.ReLU()
-        # self.im_fc_layer2 = nn.Linear(32, 10)
+        self.im_dropout1 = nn.Dropout(0.2) 
+        self.im_fc_layer1 = nn.Linear(layers[-1]*8*8, 128)
+        self.im_fc_relu1 = nn.ReLU()
+        self.im_fc_layer2 = nn.Linear(128, 10)
         self.im_softmax = nn.Softmax(dim=1)
         
         # RESNET for Audio Classification
-        # layers = [1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4]
         # layers = [1, 2, 2, 2, 2, 4, 4, 4, 4, 8, 8, 8, 8, 12, 12, 12, 12, 16, 16]
-        layers = [1, 2, 2, 2, 4, 4, 4, 8, 8, 8, 16, 16, 16, 32, 32, 32, 64, 64, 64]
+        # layers = [1, 2, 2, 2, 4, 4, 4, 8, 8, 8, 16, 16, 16, 32, 32, 32, 64, 64, 64]
+        layers = [1, 2, 2, 2, 4, 4, 4, 8, 8, 8, 8, 16, 16, 16, 16, 32, 32, 32, 32]
         self.au_block1, self.au_skip1 = get_resnet_audio_block(layers[0], layers[1], keep_size_same=False)
         self.au_relu1 = nn.ReLU()
         self.au_block2, self.au_skip2 = get_resnet_audio_block(layers[1], layers[2], keep_size_same=False)
@@ -226,7 +225,7 @@ class Resnet_Q1(nn.Module):
         self.au_block18, self.au_skip18 = get_resnet_audio_block(layers[17], layers[18], keep_size_same=False)
         self.au_relu18 = nn.ReLU()
         self.au_flatten = nn.Flatten()
-        self.au_dropout1 = nn.Dropout(0.2) # TODO: Adjust dropout
+        self.au_dropout1 = nn.Dropout(0.25) # TODO: Adjust dropout
         self.au_fc_layer1 = nn.Linear(layers[-1]*16, 128)
         self.au_fc_relu1 = nn.ReLU()
         self.au_fc_layer2 = nn.Linear(128, 35)
@@ -252,9 +251,10 @@ class Resnet_Q1(nn.Module):
         x = self.im_relu17(self.im_block17(x) + self.im_skip17(x))
         x = self.im_relu18(self.im_block18(x) + self.im_skip18(x))
         x = self.im_flatten(x)
+        x = self.im_dropout1(x)
         x = self.im_fc_layer1(x)
-        # x = self.im_fc_relu1(x)
-        # x = self.im_fc_layer2(x)
+        x = self.im_fc_relu1(x)
+        x = self.im_fc_layer2(x)
         # x = self.im_softmax(x)
         return x
         
@@ -287,6 +287,11 @@ class Resnet_Q1(nn.Module):
     
 
 
+'''
+>>> VGG NET
+>>> BELOW FUNCTIONS DEFINES VGG BLOCKS
+>>> FOR IMAGE AND AUDIO CLASSIFICATION
+'''
 
 def get_vgg_image_block(prev_channel, channel, kernel_size, num_conv, padding=0):
     if num_conv == 2:
@@ -381,105 +386,61 @@ class VGG_Q2(nn.Module):
         x = self.au_fc_layer2(x)
         # x = self.au_softmax(x)
         return x
-    
 
 
-def get_inception_image_block(in_channel, out_channel, keep_size_same=True):
-    if keep_size_same:
-        return nn.Sequential(
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU(),
-        ), nn.Sequential(
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, padding='same'),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, padding='same'),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, padding='same'),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, padding='same'),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.MaxPool2d(kernel_size=3, stride=1, padding=1),
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
-        )
-    else:
-        return nn.Sequential(
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=2),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU(),
-        ), nn.Sequential(
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=1, padding=2),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=1),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=1),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm2d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
-            nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
-        )
+'''
+>>> INCEPTION NET
+>>> BELOW FUNCTIONS DEFINES INCEPTION BLOCKS
+>>> FOR IMAGE AND AUDIO CLASSIFICATION
+'''
+
+def get_inception_image_block(in_channel, out_channel):
+    return nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=2),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU(),
+    ), nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=1, padding=2),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=1),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=1),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=1, padding=2),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
+    )
     
-def get_inception_audio_block(in_channel, out_channel, keep_size_same=True):
-    if keep_size_same:
-        return nn.Sequential(
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU(),
-        ), nn.Sequential(
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, padding='same'),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, padding='same'),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, padding='same'),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, padding='same'),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.MaxPool1d(kernel_size=3, stride=1, padding=1),
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
-        )
-    else:
-        return nn.Sequential(
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=2),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU(),
-        ), nn.Sequential(
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=1),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=1, padding=2),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=1, padding=2),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU(),
-            nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=1),
-            nn.BatchNorm1d(num_features=out_channel),
-            nn.ReLU()
-        ), nn.Sequential(
-            nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
-            nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
-        )
-    
+def get_inception_audio_block(in_channel, out_channel, p):
+    return nn.Sequential(
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=4),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU(),
+    ), nn.Sequential(
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=2),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=p+1),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=2),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=p+1),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.MaxPool1d(kernel_size=3, stride=4, padding=p),
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
+    )
     
 class Inception_Q3(nn.Module):
     def __init__(self, *args, **kwargs) -> None:
@@ -487,26 +448,26 @@ class Inception_Q3(nn.Module):
         
         # Inception for Image Classification
         channel = [3, 8, 16, 16, 32]
-        self.im_b1_path1, self.im_b1_path2, self.im_b1_path3, self.im_b1_path4 = get_inception_image_block(channel[0], channel[1], keep_size_same=False)
-        self.im_b2_path1, self.im_b2_path2, self.im_b2_path3, self.im_b2_path4 = get_inception_image_block(channel[1], channel[2], keep_size_same=False)
-        self.im_b3_path1, self.im_b3_path2, self.im_b3_path3, self.im_b3_path4 = get_inception_image_block(channel[2], channel[3], keep_size_same=False)
-        self.im_b4_path1, self.im_b4_path2, self.im_b4_path3, self.im_b4_path4 = get_inception_image_block(channel[3], channel[4], keep_size_same=False)
+        self.im_b1_path1, self.im_b1_path2, self.im_b1_path3, self.im_b1_path4 = get_inception_image_block(channel[0], channel[1])
+        self.im_b2_path1, self.im_b2_path2, self.im_b2_path3, self.im_b2_path4 = get_inception_image_block(channel[1], channel[2])
+        self.im_b3_path1, self.im_b3_path2, self.im_b3_path3, self.im_b3_path4 = get_inception_image_block(channel[2], channel[3])
+        self.im_b4_path1, self.im_b4_path2, self.im_b4_path3, self.im_b4_path4 = get_inception_image_block(channel[3], channel[4])
         self.im_flatten = nn.Flatten()
         self.im_dropout1 = nn.Dropout(0.3)
         self.im_fc_layer1 = nn.Linear(channel[-1]*2*2, 10)
         self.im_softmax = nn.Softmax(dim=1)
         
         # Inception for Audio Classification
-        channel = [1, 2, 4, 4, 8]
-        self.au_b1_path1, self.au_b1_path2, self.au_b1_path3, self.au_b1_path4 = get_inception_audio_block(channel[0], channel[1], keep_size_same=False)
-        self.au_b2_path1, self.au_b2_path2, self.au_b2_path3, self.au_b2_path4 = get_inception_audio_block(channel[1], channel[2], keep_size_same=False)
-        self.au_b3_path1, self.au_b3_path2, self.au_b3_path3, self.au_b3_path4 = get_inception_audio_block(channel[2], channel[3], keep_size_same=False)
-        self.au_b4_path1, self.au_b4_path2, self.au_b4_path3, self.au_b4_path4 = get_inception_audio_block(channel[3], channel[4], keep_size_same=False)
+        channel = [1, 2, 4, 8, 16] 
+        self.au_b1_path1, self.au_b1_path2, self.au_b1_path3, self.au_b1_path4 = get_inception_audio_block(channel[0], channel[1], p=0)
+        self.au_b2_path1, self.au_b2_path2, self.au_b2_path3, self.au_b2_path4 = get_inception_audio_block(channel[1], channel[2], p=0)
+        self.au_b3_path1, self.au_b3_path2, self.au_b3_path3, self.au_b3_path4 = get_inception_audio_block(channel[2], channel[3], p=0)
+        self.au_b4_path1, self.au_b4_path2, self.au_b4_path3, self.au_b4_path4 = get_inception_audio_block(channel[3], channel[4], p=1)
         self.au_flatten = nn.Flatten()
         self.au_dropout1 = nn.Dropout(0.1)
-        self.au_fc_layer1 = nn.Linear(channel[-1]*1000, 256)
-        self.au_relu1 = nn.ReLU()
-        self.au_fc_layer2 = nn.Linear(256, 35)
+        self.au_fc_layer1 = nn.Linear(channel[-1]*63, 35)
+        # self.au_relu1 = nn.ReLU()
+        # self.au_fc_layer2 = nn.Linear(128, 35)
         self.au_softmax = nn.Softmax(dim=1)
     
     def forward_image(self, x):
@@ -528,11 +489,86 @@ class Inception_Q3(nn.Module):
         x = self.au_flatten(x)
         x = self.au_dropout1(x)
         x = self.au_fc_layer1(x)
-        x = self.au_relu1(x)
-        x = self.au_fc_layer2(x)
+        # x = self.au_relu1(x)
+        # x = self.au_fc_layer2(x)
         # x = self.au_softmax(x)
         return x
 
+
+'''
+>>> CUSTOM NETWORK
+>>> BELOW FUNCTIONS DEFINES RESNET AND INCEPTION BLOCKS
+>>> FOR IMAGE AND AUDIO CLASSIFICATION
+'''
+
+def get_customnet_resnet_image_block(in_channel, out_channel, kernel_size, block, skip):
+    return nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=block['s1'], padding=block['p1'], dilation=block['d1']),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=kernel_size, stride=block['s2'], padding=block['p2'], dilation=block['d2']),
+        nn.BatchNorm2d(num_features=out_channel)
+    ), nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=skip['s'], padding=skip['p'], dilation=skip['d']),
+    )
+
+def get_customnet_inception_image_block(in_channel, out_channel, kernel_size, path1, path2, path3, path4):
+    return nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path1['s'], padding=path1['p'], dilation=path1['d']),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU(),
+    ), nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path2['s1'], padding=path2['p1'], dilation=path2['d1']),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path2['s2'], padding=path2['p2'], dilation=path2['d2']),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path3['s1'], padding=path3['p1'], dilation=path3['d1']),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv2d(in_channels=out_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path3['s2'], padding=path3['p2'], dilation=path3['d2']),
+        nn.BatchNorm2d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.MaxPool2d(kernel_size=kernel_size, stride=path4['s'], padding=path4['p']),
+        nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
+    )
+
+def get_customnet_resnet_audio_block(in_channel, out_channel, kernel_size, block, skip):
+    return nn.Sequential(
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=block['s1'], padding=block['p1'], dilation=block['d1']),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=kernel_size, stride=block['s2'], padding=block['p2'], dilation=block['d2']),
+        nn.BatchNorm1d(num_features=out_channel)
+    ), nn.Sequential(nn.Conv1d(in_channel, out_channel, kernel_size=1, stride=skip['s'], padding=skip['p'], dilation=skip['d']))
+    
+    
+def get_customnet_inception_audio_block(in_channel, out_channel, kernel_size, path1, path2, path3, path4):
+    return nn.Sequential(
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path1['s'], padding=path1['p'], dilation=path1['d']),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU(),
+    ), nn.Sequential(
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path2['s1'], padding=path2['p1'], dilation=path2['d1']),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path2['s2'], padding=path2['p2'], dilation=path2['d2']),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path3['s1'], padding=path3['p1'], dilation=path3['d1']),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU(),
+        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=kernel_size, stride=path3['s2'], padding=path3['p2'], dilation=path3['d2']),
+        nn.BatchNorm1d(num_features=out_channel),
+        nn.ReLU()
+    ), nn.Sequential(
+        nn.MaxPool1d(kernel_size=kernel_size, stride=path4['s'], padding=path4['p'], dilation=path4['d']),
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
+    )
         
 
 class CustomNetwork_Q4(nn.Module):
@@ -540,52 +576,107 @@ class CustomNetwork_Q4(nn.Module):
         super().__init__(*args, **kwargs)
         
         # Custom Network for Image Classification
-        channels = [3, 128]
+        channel, kernel_size = [3, 64], [3]
         for i in range(9):
-            channels.append(math.ceil(channels[-1] - 0.35*channels[-1]))
-        self.im_resnet_block1, self.im_resnet_skip1 = get_resnet_image_block(channels[0], channels[1])
+            channel.append(math.ceil(channel[-1] - 0.35*channel[-1]))
+            new_kernel = math.ceil(kernel_size[-1] + 0.25*kernel_size[-1])
+            kernel_size.append(new_kernel if new_kernel % 2 == 1 else new_kernel + 1)
+            
+        self.im_resnet_block1, self.im_resnet_skip1 = get_customnet_resnet_image_block(channel[0], channel[1], kernel_size[0], block={'p1': 1, 'p2': 1, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.im_relu1 = nn.ReLU()
-        self.im_resnet_block2, self.im_resnet_skip2 = get_resnet_image_block(channels[1], channels[2], keep_size_same=False)
+        self.im_resnet_block2, self.im_resnet_skip2 = get_customnet_resnet_image_block(channel[1], channel[2], kernel_size[1], block={'p1': 2, 'p2': 2, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.im_relu2 = nn.ReLU()
-        self.im_inception_block1_path1, self.im_inception_block1_path2, self.im_inception_block1_path3, self.im_inception_block1_path4 = get_inception_image_block(channels[2], channels[3])
-        self.im_inception_block2_path1, self.im_inception_block2_path2, self.im_inception_block2_path3, self.im_inception_block2_path4 = get_inception_image_block(channels[3], channels[4], keep_size_same=False)
-        self.im_resnet_block3, self.im_resnet_skip3 = get_resnet_image_block(channels[4], channels[5])
+        path1 = {'s': 1, 'p': 3, 'd': 1}
+        path2 = {'s1': 1, 's2': 1, 'p1': 3, 'p2': 3, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 1, 'p1': 3, 'p2': 3, 'd1': 1, 'd2': 1}
+        path4 = {'s': 1, 'p': 3}
+        self.im_inception_block1_path1, self.im_inception_block1_path2, self.im_inception_block1_path3, self.im_inception_block1_path4 = get_customnet_inception_image_block(channel[2], channel[3], kernel_size[2], path1, path2, path3, path4)
+        path1 = {'s': 1, 'p': 3, 'd': 1}
+        path2 = {'s1': 1, 's2': 1, 'p1': 3, 'p2': 4, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 1, 'p1': 3, 'p2': 4, 'd1': 1, 'd2': 1}
+        path4 = {'s': 1, 'p': 3}
+        self.im_inception_block2_path1, self.im_inception_block2_path2, self.im_inception_block2_path3, self.im_inception_block2_path4 = get_customnet_inception_image_block(channel[3], channel[4], kernel_size[3], path1, path2, path3, path4)
+        self.im_resnet_block3, self.im_resnet_skip3 = get_customnet_resnet_image_block(channel[4], channel[5], kernel_size[4], block={'p1': 6, 'p2': 6, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.im_relu3 = nn.ReLU()
-        self.im_inception_block3_path1, self.im_inception_block3_path2, self.im_inception_block3_path3, self.im_inception_block3_path4 = get_inception_image_block(channels[5], channels[6])
-        self.im_resnet_block4, self.im_resnet_skip4 = get_resnet_image_block(channels[6], channels[7])
+        path1 = {'s': 1, 'p': 7, 'd': 1}
+        path2 = {'s1': 1, 's2': 1, 'p1': 8, 'p2': 7, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 1, 'p1': 8, 'p2': 7, 'd1': 1, 'd2': 1}
+        path4 = {'s': 1, 'p': 7}
+        self.im_inception_block3_path1, self.im_inception_block3_path2, self.im_inception_block3_path3, self.im_inception_block3_path4 = get_customnet_inception_image_block(channel[5], channel[6], kernel_size[5], path1, path2, path3, path4)
+        self.im_resnet_block4, self.im_resnet_skip4 = get_customnet_resnet_image_block(channel[6], channel[7], kernel_size[6], block={'p1': 11, 'p2': 11, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.im_relu4 = nn.ReLU()
-        self.im_inception_block4_path1, self.im_inception_block4_path2, self.im_inception_block4_path3, self.im_inception_block4_path4 = get_inception_image_block(channels[7], channels[8], keep_size_same=False)
-        self.im_resnet_block5, self.im_resnet_skip5 = get_resnet_image_block(channels[8], channels[9])
+        path1 = {'s': 1, 'p': 10, 'd': 1}
+        path2 = {'s1': 1, 's2': 1, 'p1': 12, 'p2': 12, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 1, 'p1': 12, 'p2': 12, 'd1': 1, 'd2': 1}
+        path4 = {'s': 1, 'p': 10}
+        self.im_inception_block4_path1, self.im_inception_block4_path2, self.im_inception_block4_path3, self.im_inception_block4_path4 = get_customnet_inception_image_block(channel[7], channel[8], kernel_size[7], path1, path2, path3, path4)
+        self.im_resnet_block5, self.im_resnet_skip5 = get_customnet_resnet_image_block(channel[8], channel[9], kernel_size[8], block={'p1': 18, 'p2': 18, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.im_relu5 = nn.ReLU()
-        self.im_inception_block5_path1, self.im_inception_block5_path2, self.im_inception_block5_path3, self.im_inception_block5_path4 = get_inception_image_block(channels[9], channels[10])
+        path1 = {'s': 1, 'p': 15, 'd': 1}
+        path2 = {'s1': 1, 's2': 1, 'p1': 19, 'p2': 19, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 1, 'p1': 19, 'p2': 19, 'd1': 1, 'd2': 1}
+        path4 = {'s': 1, 'p': 15}
+        self.im_inception_block5_path1, self.im_inception_block5_path2, self.im_inception_block5_path3, self.im_inception_block5_path4 = get_customnet_inception_image_block(channel[9], channel[10], kernel_size[9], path1, path2, path3, path4)
         self.im_flatten = nn.Flatten()
-        self.im_fc_layer1 = nn.Linear(channels[-1]*4*4, 10)
+        self.im_dropout1 = nn.Dropout(0.1)
+        self.im_fc_layer1 = nn.Linear(channel[-1]*4*4, 10)
         self.im_softmax = nn.Softmax(dim=1)
+
         
         # Custom Network for Audio Classification
-        channels = [1, 16] # Increase channels if low accuracy is observed (64)
+        channel, kernel_size = [1, 72], [3]
         for i in range(9):
-            channels.append(math.ceil(channels[-1] - 0.35*channels[-1]))
-        self.au_resnet_block1, self.au_resnet_skip1 = get_resnet_audio_block(channels[0], channels[1], keep_size_same=False)
+            channel.append(math.ceil(channel[-1] - 0.35*channel[-1]))
+            new_kernel = math.ceil(kernel_size[-1] + 0.25*kernel_size[-1])
+            kernel_size.append(new_kernel if new_kernel % 2 == 1 else new_kernel + 1)
+        self.au_resnet_block1, self.au_resnet_skip1 = get_customnet_resnet_audio_block(channel[0], channel[1], kernel_size[0], block={'p1': 1, 'p2': 1, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 0, 'd': 1})
         self.au_relu1 = nn.ReLU()
-        self.au_resnet_block2, self.au_resnet_skip2 = get_resnet_audio_block(channels[1], channels[2], keep_size_same=False)
+        # self.au_resnet_block2, self.au_resnet_skip2 = get_customnet_resnet_audio_block(channel[1], channel[2], kernel_size[1], block={'p1': 2, 'p2': 2, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
+        self.au_resnet_block2, self.au_resnet_skip2 = get_customnet_resnet_audio_block(channel[1], channel[2], kernel_size[1], block={'p1': 2, 'p2': 2, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.au_relu2 = nn.ReLU()
-        self.au_inception_block1_path1, self.au_inception_block1_path2, self.au_inception_block1_path3, self.au_inception_block1_path4 = get_inception_audio_block(channels[2], channels[3], keep_size_same=False)
-        self.au_inception_block2_path1, self.au_inception_block2_path2, self.au_inception_block2_path3, self.au_inception_block2_path4 = get_inception_audio_block(channels[3], channels[4], keep_size_same=False)
-        self.au_resnet_block3, self.au_resnet_skip3 = get_resnet_audio_block(channels[4], channels[5], keep_size_same=False)
+        path1 = {'s': 1, 'p': 3, 'd': 1}
+        path2 = {'s1': 1, 's2': 1, 'p1': 3, 'p2': 3, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 1, 'p1': 3, 'p2': 3, 'd1': 1, 'd2': 1}
+        path4 = {'s': 1, 'p': 3, 'd' : 1}
+        self.au_inception_block1_path1, self.au_inception_block1_path2, self.au_inception_block1_path3, self.au_inception_block1_path4 = get_customnet_inception_audio_block(channel[2], channel[3], kernel_size[2], path1, path2, path3, path4)
+        path1 = {'s': 2, 'p': 2, 'd': 1}
+        path2 = {'s1': 2, 's2': 1, 'p1': 4, 'p2': 3, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 2, 'p1': 3, 'p2': 3, 'd1': 1, 'd2': 1}
+        path4 = {'s': 2, 'p': 2, 'd' : 1}
+        self.au_inception_block2_path1, self.au_inception_block2_path2, self.au_inception_block2_path3, self.au_inception_block2_path4 = get_customnet_inception_audio_block(channel[3], channel[4], kernel_size[3], path1, path2, path3, path4)
+        self.au_resnet_block3, self.au_resnet_skip3 = get_customnet_resnet_audio_block(channel[4], channel[5], kernel_size[4], block={'p1': 7, 'p2': 6, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 1, 'd': 1})
         self.au_relu3 = nn.ReLU()
-        self.au_inception_block3_path1, self.au_inception_block3_path2, self.au_inception_block3_path3, self.au_inception_block3_path4 = get_inception_audio_block(channels[5], channels[6], keep_size_same=False)
-        self.au_resnet_block4, self.au_resnet_skip4 = get_resnet_audio_block(channels[6], channels[7], keep_size_same=False)
+        path1 = {'s': 2, 'p': 8, 'd': 1}
+        path2 = {'s1': 2, 's2': 1, 'p1': 8, 'p2': 8, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 2, 'p1': 8, 'p2': 8, 'd1': 1, 'd2': 1}
+        path4 = {'s': 2, 'p': 8, 'd' : 1}
+        self.au_inception_block3_path1, self.au_inception_block3_path2, self.au_inception_block3_path3, self.au_inception_block3_path4 = get_customnet_inception_audio_block(channel[5], channel[6], kernel_size[5], path1, path2, path3, path4)
+        self.au_resnet_block4, self.au_resnet_skip4 = get_customnet_resnet_audio_block(channel[6], channel[7], kernel_size[6], block={'p1': 11, 'p2': 11, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 0, 'd': 1})
         self.au_relu4 = nn.ReLU()
-        self.au_inception_block4_path1, self.au_inception_block4_path2, self.au_inception_block4_path3, self.au_inception_block4_path4 = get_inception_audio_block(channels[7], channels[8], keep_size_same=False)
-        self.au_resnet_block5, self.au_resnet_skip5 = get_resnet_audio_block(channels[8], channels[9], keep_size_same=False)
+        # path1 = {'s': 2, 'p': 14, 'd': 1}
+        # path2 = {'s1': 2, 's2': 1, 'p1': 16, 'p2': 13, 'd1': 1, 'd2': 1}
+        # path3 = {'s1': 1, 's2': 2, 'p1': 15, 'p2': 13, 'd1': 1, 'd2': 1}
+        # path4 = {'s': 2, 'p': 14, 'd' : 1}
+        path1 = {'s': 2, 'p': 10, 'd': 1}
+        path2 = {'s1': 2, 's2': 1, 'p1': 12, 'p2': 13, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 2, 'p1': 12, 'p2': 12, 'd1': 1, 'd2': 1}
+        path4 = {'s': 2, 'p': 10, 'd' : 1}
+        self.au_inception_block4_path1, self.au_inception_block4_path2, self.au_inception_block4_path3, self.au_inception_block4_path4 = get_customnet_inception_audio_block(channel[7], channel[8], kernel_size[7], path1, path2, path3, path4)
+        # self.au_resnet_block5, self.au_resnet_skip5 = get_customnet_resnet_audio_block(channel[8], channel[9], kernel_size[8], block={'p1': 20, 'p2': 20, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 4, 'd': 1})
+        self.au_resnet_block5, self.au_resnet_skip5 = get_customnet_resnet_audio_block(channel[8], channel[9], kernel_size[8], block={'p1': 18, 'p2': 18, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 0, 'd': 1})
         self.au_relu5 = nn.ReLU()
-        self.au_inception_block5_path1, self.au_inception_block5_path2, self.au_inception_block5_path3, self.au_inception_block5_path4 = get_inception_audio_block(channels[9], channels[10])
+        # path1 = {'s': 1, 'p': 10, 'd': 1}
+        # path2 = {'s1': 1, 's2': 1, 'p1': 16, 'p2': 17, 'd1': 1, 'd2': 1}
+        # path3 = {'s1': 1, 's2': 1, 'p1': 17, 'p2': 16, 'd1': 1, 'd2': 1}
+        # path4 = {'s': 1, 'p': 10, 'd' : 1}
+        path1 = {'s': 2, 'p': 11, 'd': 1}
+        path2 = {'s1': 2, 's2': 1, 'p1': 19, 'p2': 19, 'd1': 1, 'd2': 1}
+        path3 = {'s1': 1, 's2': 2, 'p1': 19, 'p2': 15, 'd1': 1, 'd2': 1}
+        path4 = {'s': 2, 'p': 11, 'd' : 1}
+        self.au_inception_block5_path1, self.au_inception_block5_path2, self.au_inception_block5_path3, self.au_inception_block5_path4 = get_customnet_inception_audio_block(channel[9], channel[10], kernel_size[9], path1, path2, path3, path4)
         self.au_flatten = nn.Flatten()
-        self.au_dropout1 = nn.Dropout(0.1) 
-        self.au_fc_layer1 = nn.Linear(channels[-1]*32, 64)
-        self.au_fc_relu1 = nn.ReLU()
-        self.au_fc_layer2 = nn.Linear(64, 35)
+        self.au_dropout1 = nn.Dropout(0.1)
+        self.au_fc_layer1 = nn.Linear(channel[-1]*50, 35)
         self.au_softmax = nn.Softmax(dim=1)
     
     def forward_image(self, x):
@@ -618,8 +709,6 @@ class CustomNetwork_Q4(nn.Module):
         x = self.au_dropout1(x)
         x = self.au_flatten(x)
         x = self.au_fc_layer1(x)
-        x = self.au_fc_relu1(x)
-        x = self.au_fc_layer2(x)
         # x = self.au_softmax(x)
         return x
 
@@ -629,6 +718,7 @@ def trainer(gpu="F", dataloader=None, network=None, criterion=None, optimizer=No
     network = network.to(device)
     network.train()
     best_accuracy = 0
+    best_chkpt = None
     
     for epoch in range(EPOCH):
         train_loss = 0.0
@@ -660,16 +750,16 @@ def trainer(gpu="F", dataloader=None, network=None, criterion=None, optimizer=No
             epoch, train_loss, accuracy))
         if accuracy > best_accuracy:
             best_accuracy = accuracy
-            check_point = {
+            best_chkpt = {
                 "epoch": epoch,
                 "model_state_dict": network.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "loss": train_loss,
                 "accuracy": accuracy
             }
-            torch.save(check_point, f"checkpoint_{dataloader.dataset.type}.pth")
         if accuracy > 60:
             break        
+    torch.save(best_chkpt, f"checkpoint_{dataloader.dataset.type}.pth")
     return
 
 
