@@ -45,6 +45,7 @@ class ImageDataset(Dataset):
         return image, label
 
 
+
 '''
 >>> AUDIO DATASET 
 >>> BELOW CLASS DEFINES DATASET FOR AUDIO CLASSIFICATION
@@ -416,27 +417,53 @@ def get_inception_image_block(in_channel, out_channel):
         nn.Conv2d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
     )
 
-def get_inception_audio_block(in_channel, out_channel):
+# def get_inception_audio_block(in_channel, out_channel, last_block=False):
+#     extra_padding = 1 if last_block else 0
+#     extra_stride = 2 if last_block else 1
+#     return nn.Sequential(
+#         nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=4*extra_stride),
+#         nn.BatchNorm1d(num_features=out_channel),
+#         nn.ReLU(),
+#     ), nn.Sequential(
+#         nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=2),
+#         nn.BatchNorm1d(num_features=out_channel),
+#         nn.ReLU(),
+#         nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2*extra_stride, padding=1+extra_padding),
+#         nn.BatchNorm1d(num_features=out_channel),
+#         nn.ReLU()
+#     ), nn.Sequential(
+#         nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=2),
+#         nn.BatchNorm1d(num_features=out_channel),
+#         nn.ReLU(),
+#         nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2*extra_stride, padding=1+extra_padding),
+#         nn.BatchNorm1d(num_features=out_channel),
+#         nn.ReLU()
+#     ), nn.Sequential(
+#         nn.MaxPool1d(kernel_size=3, stride=4*extra_stride, padding=0+extra_padding),
+#         nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
+#     )
+    
+def get_inception_audio_block(in_channel, out_channel, p):
     return nn.Sequential(
-        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=2),
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1, stride=4),
         nn.BatchNorm1d(num_features=out_channel),
         nn.ReLU(),
     ), nn.Sequential(
-        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=1),
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=2),
         nn.BatchNorm1d(num_features=out_channel),
         nn.ReLU(),
-        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=1, padding=2),
+        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=p+1),
         nn.BatchNorm1d(num_features=out_channel),
         nn.ReLU()
     ), nn.Sequential(
-        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=1, padding=2),
+        nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=3, stride=2, padding=2),
         nn.BatchNorm1d(num_features=out_channel),
         nn.ReLU(),
-        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=1),
+        nn.Conv1d(in_channels=out_channel, out_channels=out_channel, kernel_size=5, stride=2, padding=p+1),
         nn.BatchNorm1d(num_features=out_channel),
         nn.ReLU()
     ), nn.Sequential(
-        nn.MaxPool1d(kernel_size=3, stride=2, padding=1),
+        nn.MaxPool1d(kernel_size=3, stride=4, padding=p),
         nn.Conv1d(in_channels=in_channel, out_channels=out_channel, kernel_size=1)
     )
     
@@ -456,17 +483,29 @@ class Inception_Q3(nn.Module):
         self.im_softmax = nn.Softmax(dim=1)
         
         # Inception for Audio Classification
-        channel = [1, 2, 4, 8, 16]
-        self.au_b1_path1, self.au_b1_path2, self.au_b1_path3, self.au_b1_path4 = get_inception_audio_block(channel[0], channel[1])
-        self.au_b2_path1, self.au_b2_path2, self.au_b2_path3, self.au_b2_path4 = get_inception_audio_block(channel[1], channel[2])
-        self.au_b3_path1, self.au_b3_path2, self.au_b3_path3, self.au_b3_path4 = get_inception_audio_block(channel[2], channel[3])
-        self.au_b4_path1, self.au_b4_path2, self.au_b4_path3, self.au_b4_path4 = get_inception_audio_block(channel[3], channel[4])
+        # channel = [1, 2, 4, 8, 16] 
+        # self.au_b1_path1, self.au_b1_path2, self.au_b1_path3, self.au_b1_path4 = get_inception_audio_block(channel[0], channel[1], last_block=False)
+        # self.au_b2_path1, self.au_b2_path2, self.au_b2_path3, self.au_b2_path4 = get_inception_audio_block(channel[1], channel[2], last_block=False)
+        # self.au_b3_path1, self.au_b3_path2, self.au_b3_path3, self.au_b3_path4 = get_inception_audio_block(channel[2], channel[3], last_block=False)
+        # self.au_b4_path1, self.au_b4_path2, self.au_b4_path3, self.au_b4_path4 = get_inception_audio_block(channel[3], channel[4], last_block=True)
+        # self.au_flatten = nn.Flatten()
+        # self.au_dropout1 = nn.Dropout(0.3)
+        # self.au_fc_layer1 = nn.Linear(channel[-1]*32, 35)
+        # # self.au_relu1 = nn.ReLU()
+        # # self.au_fc_layer2 = nn.Linear(128, 35)
+        # self.au_softmax = nn.Softmax(dim=1)
+        channel = [1, 2, 4, 8, 16] 
+        self.au_b1_path1, self.au_b1_path2, self.au_b1_path3, self.au_b1_path4 = get_inception_audio_block(channel[0], channel[1], p=0)
+        self.au_b2_path1, self.au_b2_path2, self.au_b2_path3, self.au_b2_path4 = get_inception_audio_block(channel[1], channel[2], p=0)
+        self.au_b3_path1, self.au_b3_path2, self.au_b3_path3, self.au_b3_path4 = get_inception_audio_block(channel[2], channel[3], p=0)
+        self.au_b4_path1, self.au_b4_path2, self.au_b4_path3, self.au_b4_path4 = get_inception_audio_block(channel[3], channel[4], p=1)
         self.au_flatten = nn.Flatten()
-        self.au_dropout1 = nn.Dropout(0.2)
-        self.au_fc_layer1 = nn.Linear(channel[-1]*1000, 256)
-        self.au_relu1 = nn.ReLU()
-        self.au_fc_layer2 = nn.Linear(256, 35)
+        self.au_dropout1 = nn.Dropout(0.1)
+        self.au_fc_layer1 = nn.Linear(channel[-1]*63, 35)
+        # self.au_relu1 = nn.ReLU()
+        # self.au_fc_layer2 = nn.Linear(128, 35)
         self.au_softmax = nn.Softmax(dim=1)
+        
     
     def forward_image(self, x):
         x = self.im_b1_path1(x) + self.im_b1_path2(x) + self.im_b1_path3(x) + self.im_b1_path4(x)
@@ -487,8 +526,8 @@ class Inception_Q3(nn.Module):
         x = self.au_flatten(x)
         x = self.au_dropout1(x)
         x = self.au_fc_layer1(x)
-        x = self.au_relu1(x)
-        x = self.au_fc_layer2(x)
+        # x = self.au_relu1(x)
+        # x = self.au_fc_layer2(x)
         # x = self.au_softmax(x)
         return x
 
@@ -629,6 +668,7 @@ class CustomNetwork_Q4(nn.Module):
             kernel_size.append(new_kernel if new_kernel % 2 == 1 else new_kernel + 1)
         self.au_resnet_block1, self.au_resnet_skip1 = get_customnet_resnet_audio_block(channel[0], channel[1], kernel_size[0], block={'p1': 1, 'p2': 1, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 0, 'd': 1})
         self.au_relu1 = nn.ReLU()
+        # self.au_resnet_block2, self.au_resnet_skip2 = get_customnet_resnet_audio_block(channel[1], channel[2], kernel_size[1], block={'p1': 2, 'p2': 2, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.au_resnet_block2, self.au_resnet_skip2 = get_customnet_resnet_audio_block(channel[1], channel[2], kernel_size[1], block={'p1': 2, 'p2': 2, 's1': 1, 's2': 1, 'd1': 1, 'd2': 1}, skip={'s': 1, 'p': 0, 'd': 1})
         self.au_relu2 = nn.ReLU()
         path1 = {'s': 1, 'p': 3, 'd': 1}
@@ -650,13 +690,22 @@ class CustomNetwork_Q4(nn.Module):
         self.au_inception_block3_path1, self.au_inception_block3_path2, self.au_inception_block3_path3, self.au_inception_block3_path4 = get_customnet_inception_audio_block(channel[5], channel[6], kernel_size[5], path1, path2, path3, path4)
         self.au_resnet_block4, self.au_resnet_skip4 = get_customnet_resnet_audio_block(channel[6], channel[7], kernel_size[6], block={'p1': 11, 'p2': 11, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 0, 'd': 1})
         self.au_relu4 = nn.ReLU()
+        # path1 = {'s': 2, 'p': 14, 'd': 1}
+        # path2 = {'s1': 2, 's2': 1, 'p1': 16, 'p2': 13, 'd1': 1, 'd2': 1}
+        # path3 = {'s1': 1, 's2': 2, 'p1': 15, 'p2': 13, 'd1': 1, 'd2': 1}
+        # path4 = {'s': 2, 'p': 14, 'd' : 1}
         path1 = {'s': 2, 'p': 10, 'd': 1}
         path2 = {'s1': 2, 's2': 1, 'p1': 12, 'p2': 13, 'd1': 1, 'd2': 1}
         path3 = {'s1': 1, 's2': 2, 'p1': 12, 'p2': 12, 'd1': 1, 'd2': 1}
         path4 = {'s': 2, 'p': 10, 'd' : 1}
         self.au_inception_block4_path1, self.au_inception_block4_path2, self.au_inception_block4_path3, self.au_inception_block4_path4 = get_customnet_inception_audio_block(channel[7], channel[8], kernel_size[7], path1, path2, path3, path4)
+        # self.au_resnet_block5, self.au_resnet_skip5 = get_customnet_resnet_audio_block(channel[8], channel[9], kernel_size[8], block={'p1': 20, 'p2': 20, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 4, 'd': 1})
         self.au_resnet_block5, self.au_resnet_skip5 = get_customnet_resnet_audio_block(channel[8], channel[9], kernel_size[8], block={'p1': 18, 'p2': 18, 's1': 1, 's2': 2, 'd1': 1, 'd2': 1}, skip={'s': 2, 'p': 0, 'd': 1})
         self.au_relu5 = nn.ReLU()
+        # path1 = {'s': 1, 'p': 10, 'd': 1}
+        # path2 = {'s1': 1, 's2': 1, 'p1': 16, 'p2': 17, 'd1': 1, 'd2': 1}
+        # path3 = {'s1': 1, 's2': 1, 'p1': 17, 'p2': 16, 'd1': 1, 'd2': 1}
+        # path4 = {'s': 1, 'p': 10, 'd' : 1}
         path1 = {'s': 2, 'p': 11, 'd': 1}
         path2 = {'s1': 2, 's2': 1, 'p1': 19, 'p2': 19, 'd1': 1, 'd2': 1}
         path3 = {'s1': 1, 's2': 2, 'p1': 19, 'p2': 15, 'd1': 1, 'd2': 1}
@@ -701,10 +750,6 @@ class CustomNetwork_Q4(nn.Module):
         return x
 
 
-'''
->>> TRAINER FUNCTION
-'''
-
 def trainer(gpu="F", dataloader=None, network=None, criterion=None, optimizer=None):
     device = torch.device("cuda:0") if gpu == "T" else torch.device("cpu")
     network = network.to(device)
@@ -716,7 +761,11 @@ def trainer(gpu="F", dataloader=None, network=None, criterion=None, optimizer=No
         train_loss = 0.0
         correct = 0
         total = 0
+        # batch = 0
+        # print('Batch', end=" ")
         for data, labels in dataloader:
+            # print(batch, end=" ")
+            # batch += 1
             data, labels = data.to(device), labels.to(device)
             optimizer.zero_grad()
             if dataloader.dataset.type == "image":
@@ -732,6 +781,7 @@ def trainer(gpu="F", dataloader=None, network=None, criterion=None, optimizer=No
             correct += (predicted == labels).sum().item()
         accuracy = 100 * correct / total
         train_loss = train_loss / len(dataloader) 
+        # print()
         
         print("Training Epoch: {}, [Loss: {}, Accuracy: {}]".format(
             epoch, train_loss, accuracy))
@@ -750,9 +800,6 @@ def trainer(gpu="F", dataloader=None, network=None, criterion=None, optimizer=No
     return
 
 
-'''
->>> VALIDATOR FUNCTION
-'''
 
 def validator(gpu="F", dataloader=None, network=None, criterion=None, optimizer=None):
     # Fine Tuning on the validation set
@@ -800,17 +847,14 @@ def validator(gpu="F", dataloader=None, network=None, criterion=None, optimizer=
     return
     
 
-'''
->>> TESTING FUNCTION
-'''
 
-def evaluator(gpu="F", dataloader=None, network=None, criterion=None, optimizer=None):    
-    device = torch.device("cuda:0") if gpu == "T" else torch.device("cpu")
+
+def evaluator(dataloader=None, network=None, criterion=None, optimizer=None):    
     check_point = torch.load(f"checkpoint_{dataloader.dataset.type}.pth")
     network.load_state_dict(check_point["model_state_dict"])
+    device = torch.device("cuda:0") if  torch.cuda.is_available() else torch.device("cpu")
     network = network.to(device)
     network.eval()
-    criterion = nn.CrossEntropyLoss()
     test_loss = 0.0
     correct = 0
     total = 0

@@ -1,0 +1,126 @@
+/mnt/disk1/sumdev/MSA_BTP/env/lib/python3.9/site-packages/torchvision/io/image.py:13: UserWarning: Failed to load image Python extension: '/mnt/disk1/sumdev/MSA_BTP/env/lib/python3.9/site-packages/torchvision/image.so: undefined symbol: _ZN3c1017RegisterOperatorsD1Ev'If you don't plan on using image functionality from `torchvision.io`, you can ignore this warning. Otherwise, there might be something wrong with your environment. Did you have `libjpeg` or `libpng` installed before building `torchvision` from source?
+  warn(
+Files already downloaded and verified
+T
+Files already downloaded and verified
+Files already downloaded and verified
+Files already downloaded and verified
+Training Resnet_Q1 Architecture on train split of ImageDataset
+Training Epoch: 0, [Loss: 2.045150680355279, Accuracy: 23.039815512048193]
+Training Epoch: 1, [Loss: 1.7058688588889248, Accuracy: 36.579913403614455]
+Training Epoch: 2, [Loss: 1.5825733696839897, Accuracy: 41.53332078313253]
+Training Epoch: 3, [Loss: 1.5011383693620384, Accuracy: 44.6277296686747]
+Training Epoch: 4, [Loss: 1.4363901669002441, Accuracy: 47.96922063253012]
+Training Epoch: 5, [Loss: 1.3730261056538087, Accuracy: 49.97411521084337]
+Training Epoch: 6, [Loss: 1.324008302875312, Accuracy: 51.96018448795181]
+Training Epoch: 7, [Loss: 1.270548319960215, Accuracy: 54.03567394578313]
+Training Epoch: 8, [Loss: 1.2206356392567417, Accuracy: 55.92055722891566]
+Training Epoch: 9, [Loss: 1.1770030082349319, Accuracy: 57.8125]
+Training Epoch: 10, [Loss: 1.138173701892416, Accuracy: 59.410297439759034]
+Training Epoch: 11, [Loss: 1.0902998113488576, Accuracy: 61.057511295180724]
+Time Taken in minutes:  1.742955207824707
+Validating Resnet_Q1 Architecture on val split of ImageDataset
+Validation Epoch: 0, [Loss: 1.2079245448112488, Accuracy: 57.300646551724135]
+Time Taken in minutes:  0.028360084692637125
+Testing Resnet_Q1 Architecture on test split of ImageDataset
+Testing: [Loss: 1.2561925512093763, Accuracy: 55.5088141025641]
+Time Taken in minutes:  0.01926571528116862
+Training Resnet_Q1 Architecture on train split of AudioDataset
+Training Epoch: 0, [Loss: 3.1168483319239315, Accuracy: 14.245421072507552]
+Training Epoch: 1, [Loss: 2.1438410134473957, Accuracy: 37.89298527190332]
+Training Epoch: 2, [Loss: 1.5825976381849307, Accuracy: 53.003445996978854]
+Training Epoch: 3, [Loss: 1.2562190413114889, Accuracy: 62.18254342900302]
+Time Taken in minutes:  1.86997043689092
+Validating Resnet_Q1 Architecture on val split of AudioDataset
+Validation Epoch: 0, [Loss: 1.0676882328925195, Accuracy: 67.72524350649351]
+Time Taken in minutes:  0.12201546430587769
+Testing Resnet_Q1 Architecture on test split of AudioDataset
+Testing: [Loss: 1.1613654753741096, Accuracy: 65.79963235294117]
+Time Taken in minutes:  0.060952357451121014
+Training VGG_Q2 Architecture on train split of ImageDataset
+Training Epoch: 0, [Loss: 2.139024087463517, Accuracy: 18.354668674698797]
+Training Epoch: 1, [Loss: 1.7705110548490501, Accuracy: 34.30675828313253]
+Training Epoch: 2, [Loss: 1.61729705010552, Accuracy: 40.38027108433735]
+Training Epoch: 3, [Loss: 1.5202930235719105, Accuracy: 44.20651355421687]
+Training Epoch: 4, [Loss: 1.4445666042437035, Accuracy: 47.33621987951807]
+Training Epoch: 5, [Loss: 1.3824791150638855, Accuracy: 49.55995858433735]
+Training Epoch: 6, [Loss: 1.3331655888672334, Accuracy: 51.24246987951807]
+Training Epoch: 7, [Loss: 1.2904914657035507, Accuracy: 53.24265813253012]
+Training Epoch: 8, [Loss: 1.2554481447820205, Accuracy: 54.506306475903614]
+Training Epoch: 9, [Loss: 1.2306654611265804, Accuracy: 55.59346762048193]
+Training Epoch: 10, [Loss: 1.212273998971445, Accuracy: 56.48296310240964]
+Training Epoch: 11, [Loss: 1.178715195102864, Accuracy: 57.7183734939759]
+Training Epoch: 12, [Loss: 1.161693716444165, Accuracy: 58.12311746987952]
+Training Epoch: 13, [Loss: 1.1379863291260708, Accuracy: 58.99143448795181]
+Training Epoch: 14, [Loss: 1.1182718110012722, Accuracy: 59.8668109939759]
+Training Epoch: 15, [Loss: 1.1113929879593563, Accuracy: 60.45980798192771]
+Time Taken in minutes:  1.1039171417554219
+Validating VGG_Q2 Architecture on val split of ImageDataset
+Validation Epoch: 0, [Loss: 1.1873522996902466, Accuracy: 57.11206896551724]
+Time Taken in minutes:  0.017255238691965737
+Testing VGG_Q2 Architecture on test split of ImageDataset
+Testing: [Loss: 1.1430793809585083, Accuracy: 59.13461538461539]
+Time Taken in minutes:  0.021397332350413006
+Training VGG_Q2 Architecture on train split of AudioDataset
+Training Epoch: 0, [Loss: 3.502779775515784, Accuracy: 3.749291918429003]
+Training Epoch: 1, [Loss: 3.4500119470037363, Accuracy: 4.9907949395770395]
+Training Epoch: 2, [Loss: 2.442660057652753, Accuracy: 28.868485649546827]
+Training Epoch: 3, [Loss: 1.9978927869090861, Accuracy: 42.110791163142]
+Training Epoch: 4, [Loss: 1.834074265827225, Accuracy: 46.93400679758308]
+Training Epoch: 5, [Loss: 1.7246962963994537, Accuracy: 50.14397658610272]
+Training Epoch: 6, [Loss: 1.5450839250829644, Accuracy: 55.806268882175225]
+Training Epoch: 7, [Loss: 1.3485755260437278, Accuracy: 61.93471487915408]
+Time Taken in minutes:  3.5600048104921975
+Validating VGG_Q2 Architecture on val split of AudioDataset
+Validation Epoch: 0, [Loss: 1.2627362941766713, Accuracy: 64.91477272727273]
+Time Taken in minutes:  0.029935777187347412
+Testing VGG_Q2 Architecture on test split of AudioDataset
+Testing: [Loss: 1.4458265655180986, Accuracy: 61.213235294117645]
+Time Taken in minutes:  0.024180217583974203
+Training Inception_Q3 Architecture on train split of ImageDataset
+Training Epoch: 0, [Loss: 1.557142912982458, Accuracy: 43.540568524096386]
+Training Epoch: 1, [Loss: 1.211574613868472, Accuracy: 56.57708960843374]
+Training Epoch: 2, [Loss: 1.060100154524826, Accuracy: 62.37528237951807]
+Time Taken in minutes:  0.2493389089902242
+Validating Inception_Q3 Architecture on val split of ImageDataset
+Validation Epoch: 0, [Loss: 1.0703012131411453, Accuracy: 62.35183189655172]
+Time Taken in minutes:  0.018993592262268065
+Testing Inception_Q3 Architecture on test split of ImageDataset
+Testing: [Loss: 1.0422211801394439, Accuracy: 63.34134615384615]
+Time Taken in minutes:  0.018516584237416586
+Training Inception_Q3 Architecture on train split of AudioDataset
+Training Epoch: 0, [Loss: 2.7341124604475824, Accuracy: 24.846582326283986]
+Training Epoch: 1, [Loss: 2.134140966341935, Accuracy: 41.15960158610272]
+Training Epoch: 2, [Loss: 1.8473014905373495, Accuracy: 49.23645203927492]
+Training Epoch: 3, [Loss: 1.6435051700859993, Accuracy: 54.81495468277946]
+Training Epoch: 4, [Loss: 1.4937506645827856, Accuracy: 58.69878209969789]
+Training Epoch: 5, [Loss: 1.3841987541254914, Accuracy: 61.49570430513595]
+Time Taken in minutes:  2.7606581608454386
+Validating Inception_Q3 Architecture on val split of AudioDataset
+Validation Epoch: 0, [Loss: 1.374508868564259, Accuracy: 61.73904220779221]
+Time Taken in minutes:  0.09176071087519327
+Testing Inception_Q3 Architecture on test split of AudioDataset
+Testing: [Loss: 1.4508880615234374, Accuracy: 59.862132352941174]
+Time Taken in minutes:  0.04269928932189941
+Training CustomNetwork_Q4 Architecture on train split of ImageDataset
+Training Epoch: 0, [Loss: 1.649696191750377, Accuracy: 37.61059864457831]
+Training Epoch: 1, [Loss: 1.1293560934354023, Accuracy: 58.7914156626506]
+Training Epoch: 2, [Loss: 0.8832383466413222, Accuracy: 68.53586219879519]
+Time Taken in minutes:  3.703267498811086
+Validating CustomNetwork_Q4 Architecture on val split of ImageDataset
+Validation Epoch: 0, [Loss: 0.8396907459045279, Accuracy: 70.09698275862068]
+Time Taken in minutes:  0.2429856856664022
+Testing CustomNetwork_Q4 Architecture on test split of ImageDataset
+Testing: [Loss: 0.9516401955714593, Accuracy: 66.73677884615384]
+Time Taken in minutes:  0.10842960675557455
+Training CustomNetwork_Q4 Architecture on train split of AudioDataset
+Training Epoch: 0, [Loss: 2.406599966060719, Accuracy: 30.74962235649547]
+Training Epoch: 1, [Loss: 1.5831177940541523, Accuracy: 53.398791540785496]
+Training Epoch: 2, [Loss: 1.3252151576954072, Accuracy: 61.095638217522655]
+Time Taken in minutes:  9.565117641290028
+Validating CustomNetwork_Q4 Architecture on val split of AudioDataset
+Validation Epoch: 0, [Loss: 1.1432367679360624, Accuracy: 66.72077922077922]
+Time Taken in minutes:  0.456052311261495
+Testing CustomNetwork_Q4 Architecture on test split of AudioDataset
+Testing: [Loss: 1.2898787870126611, Accuracy: 61.98529411764706]
+Time Taken in minutes:  0.22028486728668212

@@ -40,6 +40,8 @@ if __name__ == "__main__":
         )
         
         for dataset in imageDataset + audioDataset:
+            import time
+            start = time.time()
             if dataset.datasplit == "train":
                 print(
                     "Training {} Architecture on {} split of {}".format(
@@ -106,10 +108,11 @@ if __name__ == "__main__":
                     num_workers=2,
                     drop_last=True
                 )
-                
                 evaluator(
+                    gpu=A.gpu,
                     dataloader=test_dataloader,
                     network=network,
-                    criterion=criterion,
-                    optimizer=optimizer
-                )
+                    criterion=None,
+                    optimizer=None)
+            end = time.time()
+            print('Time taken:', (end - start) / 60, 'minutes')
